@@ -3,405 +3,527 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Te amo Ruby 💖</title>
+<title>Te amo Ruby</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body {
-    background: radial-gradient(ellipse at center, #1a0020 0%, #0d000f 60%, #000000 100%);
-    min-height: 100vh;
-    overflow: hidden;
-    font-family: 'Georgia', serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    cursor: default;
-  }
+body {
+  background: radial-gradient(ellipse at center, #1a0020 0%, #0d000f 60%, #000 100%);
+  min-height: 100vh; overflow: hidden;
+  font-family: 'Georgia', serif; position: relative;
+}
 
-  /* ───── Stars (ocultas al inicio) ───── */
-  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0; transition: opacity 1.4s ease; }
-  .stars.show { opacity: 1; }
-  .star {
-    position: absolute; border-radius: 50%; background: white;
-    animation: twinkle var(--d) ease-in-out infinite alternate; opacity: 0;
-  }
-  @keyframes twinkle {
-    0%   { opacity: 0; transform: scale(0.5); }
-    100% { opacity: var(--op); transform: scale(1.2); }
-  }
+/* ── Stars ── */
+#stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.star {
+  position: absolute; border-radius: 50%; background: white; opacity: 0;
+  animation: twinkle var(--d) ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  0%   { opacity: 0; transform: scale(.5); }
+  100% { opacity: var(--op); transform: scale(1.2); }
+}
 
-  /* ───── Corazón principal ───── */
-  #main-heart {
-    font-size: 10rem;
-    cursor: pointer;
-    position: relative;
-    z-index: 20;
-    transition: transform 0.15s ease;
-    animation: heartbeat 1.4s ease-in-out infinite;
-    filter: drop-shadow(0 0 20px #ff2060) drop-shadow(0 0 50px #ff0040);
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  #main-heart:hover { transform: scale(1.12); }
-  #main-heart.explode {
-    animation: explodeHeart 0.6s ease-out forwards;
-  }
-  @keyframes heartbeat {
-    0%,100% { transform: scale(1);    filter: drop-shadow(0 0 20px #ff2060) drop-shadow(0 0 50px #ff0040); }
-    50%     { transform: scale(1.15); filter: drop-shadow(0 0 40px #ff60a0) drop-shadow(0 0 90px #ff2060); }
-  }
-  @keyframes explodeHeart {
-    0%   { transform: scale(1);    opacity: 1; }
-    40%  { transform: scale(2.2); opacity: 1; }
-    100% { transform: scale(0);    opacity: 0; }
-  }
+/* ── Ground ── */
+#ground {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 68px;
+  background: linear-gradient(to top, rgba(50,0,25,.9), transparent);
+  z-index: 5; display: flex; align-items: flex-end; padding-bottom: 2px; overflow: hidden;
+}
+#ground-flowers {
+  font-size: 1.5rem; white-space: nowrap; width: 200%;
+  filter: drop-shadow(0 0 6px #ff4d8d);
+  animation: gScroll 28s linear infinite;
+}
+@keyframes gScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-  /* hint text */
-  #hint {
-    position: absolute;
-    bottom: -3rem;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255,160,200,0.6);
-    font-size: 0.9rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    animation: fadeInOut 2.5s ease-in-out infinite;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-  @keyframes fadeInOut { 0%,100%{opacity:0.3} 50%{opacity:0.9} }
+/* ── Bird wrapper ── */
+#bird {
+  position: fixed; z-index: 30; display: none; pointer-events: none;
+  width: 230px; height: auto;
+  filter:
+    drop-shadow(0 0 18px rgba(255,160,210,.7))
+    drop-shadow(0 0 40px rgba(255,80,160,.35));
+}
 
-  /* wrapper del corazón para centrar el hint */
-  #heart-wrapper {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    z-index: 20;
-  }
+/* Wing flap — animates the wing group inside the SVG */
+#bird-wing-top {
+  transform-box: fill-box;
+  transform-origin: 100% 100%;   /* shoulder = bottom-right of wing bounding box */
+  animation: wingBeat .34s ease-in-out infinite alternate;
+}
+@keyframes wingBeat {
+  0%   { transform: rotate(-26deg); }
+  100% { transform: rotate(20deg);  }
+}
 
-  /* ───── Todo lo que aparece al hacer click ───── */
-  #show-layer {
-    position: fixed; inset: 0;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.8s ease 0.3s;
-    z-index: 5;
-  }
-  #show-layer.show { opacity: 1; pointer-events: auto; }
+/* secondary feathers follow slightly behind */
+#bird-wing-sec {
+  transform-box: fill-box;
+  transform-origin: 100% 0%;
+  animation: wingBeat2 .34s ease-in-out infinite alternate;
+}
+@keyframes wingBeat2 {
+  0%   { transform: rotate(-12deg); }
+  100% { transform: rotate(10deg);  }
+}
 
-  /* ───── Pétalos cayendo ───── */
-  .petal {
-    position: fixed; top: -60px;
-    font-size: var(--s);
-    animation: fall var(--d) linear infinite var(--delay);
-    filter: drop-shadow(0 0 4px var(--glow));
-    pointer-events: none;
-    z-index: 6;
-    opacity: 0;
-  }
-  @keyframes fall {
-    0%   { transform: translateY(-60px) rotate(0deg) translateX(0); opacity: 0; }
-    10%  { opacity: 0.9; }
-    90%  { opacity: 0.7; }
-    100% { transform: translateY(110vh) rotate(720deg) translateX(var(--drift)); opacity: 0; }
-  }
+/* ── EGG ── */
+#egg-container {
+  position: fixed; width: 68px; height: 88px;
+  z-index: 25; display: none; overflow: visible;
+}
+#egg-whole { position: absolute; inset: 0; }
+.egg-shell {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 36% 30%, #fffef6, #f2e2b8 55%, #d6bc82);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  box-shadow: inset -5px -5px 12px rgba(0,0,0,.13), 4px 6px 16px rgba(0,0,0,.45);
+}
+#crack-svg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; transition: opacity .12s ease;
+}
+#crack-svg.show { opacity: 1; }
 
-  /* ───── Corazones flotando desde abajo ───── */
-  .heart-float {
-    position: fixed; bottom: -80px;
-    font-size: var(--s);
-    animation: floatUp var(--d) ease-in infinite var(--delay);
-    filter: drop-shadow(0 0 8px #ff4d8d);
-    pointer-events: none;
-    z-index: 6;
-    opacity: 0;
-  }
-  @keyframes floatUp {
-    0%   { transform: translateY(0) scale(0.4) rotate(var(--rot)); opacity: 0; }
-    20%  { opacity: 1; }
-    80%  { opacity: 0.6; }
-    100% { transform: translateY(-110vh) scale(1.2) rotate(calc(var(--rot) + 30deg)); opacity: 0; }
-  }
+.egg-half { position: absolute; inset: 0; display: none; }
+.egg-half .egg-shell { position: absolute; inset: 0; }
+#egg-left  .egg-shell { clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%); }
+#egg-right .egg-shell { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
+#egg-left.split  { animation: splitLeft  .85s ease-out forwards; }
+#egg-right.split { animation: splitRight .85s ease-out forwards; }
+@keyframes splitLeft  { to { transform: rotate(-60deg) translate(-55px, 45px); opacity: 0; } }
+@keyframes splitRight { to { transform: rotate(60deg)  translate(55px,  45px); opacity: 0; } }
 
-  /* ───── Sparkles ───── */
-  .sparkle {
-    position: fixed;
-    pointer-events: none;
-    animation: sparkleAnim var(--d) ease-in-out infinite var(--delay);
-    font-size: var(--s);
-    left: var(--x); top: var(--y);
-    opacity: 0;
-    z-index: 6;
-  }
-  @keyframes sparkleAnim {
-    0%,100% { opacity:0; transform:scale(0) rotate(0deg); }
-    50%     { opacity:1; transform:scale(1.3) rotate(180deg); }
-  }
+@keyframes eggShake {
+  0%,100%{ transform: translate(0,0) rotate(0deg); }
+  18%    { transform: translate(-7px,0) rotate(-5deg); }
+  36%    { transform: translate(7px,0)  rotate(5deg); }
+  54%    { transform: translate(-5px,0) rotate(-3deg); }
+  72%    { transform: translate(5px,0)  rotate(3deg); }
+}
+.shake { animation: eggShake .42s ease-in-out !important; }
 
-  /* ───── Card ───── */
-  .card {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    z-index: 15;
-    text-align: center;
-    padding: 55px 65px;
-    border-radius: 32px;
-    background: rgba(80, 0, 40, 0.38);
-    backdrop-filter: blur(18px);
-    border: 1.5px solid rgba(255, 100, 160, 0.35);
-    box-shadow: 0 0 60px rgba(255,50,120,.25), 0 0 120px rgba(180,0,80,.15);
-    transition: transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.5s,
-                opacity 0.5s ease 0.4s;
-    opacity: 0;
-    max-width: 90vw;
-    width: 520px;
-  }
-  .card.show {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-    animation: cardBreath 4s ease-in-out infinite 1.2s;
-  }
-  @keyframes cardBreath {
-    0%,100% { box-shadow: 0 0 60px rgba(255,50,120,.25), 0 0 120px rgba(180,0,80,.15); }
-    50%     { box-shadow: 0 0 90px rgba(255,50,120,.45), 0 0 180px rgba(180,0,80,.30); }
-  }
-  .card::before {
-    content: '';
-    position: absolute; inset: -3px; border-radius: 34px;
-    background: linear-gradient(45deg, #ff0050, #ff80b0, #c0006b, #ff4d8d, #ff0050);
-    background-size: 300% 300%;
-    z-index: -1;
-    animation: borderSpin 4s linear infinite;
-    opacity: 0.7;
-  }
-  @keyframes borderSpin {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
+/* impact ring */
+#impact-ring {
+  position: fixed; width: 100px; height: 100px; border-radius: 50%;
+  border: 3px solid rgba(255,200,150,.8);
+  z-index: 24; display: none; pointer-events: none;
+  transform: translate(-50%,-50%) scale(0);
+}
+#impact-ring.burst { animation: ringBurst .7s ease-out forwards; }
+@keyframes ringBurst {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(4); opacity: 0; }
+}
 
-  .deco-hearts {
-    font-size: 2rem; margin-bottom: 14px;
-    animation: bounce 2s ease-in-out infinite;
-    display: block; letter-spacing: 10px;
-    filter: drop-shadow(0 0 10px #ff2d78);
-  }
-  @keyframes bounce {
-    0%,100% { transform: translateY(0) scale(1); }
-    50%     { transform: translateY(-10px) scale(1.12); }
-  }
-  .flower-ring {
-    font-size: 1.6rem; margin-bottom: 22px;
-    animation: spreadFlowers 5s ease-in-out infinite;
-    display: block; letter-spacing: 4px;
-    filter: drop-shadow(0 0 8px #ff80b0);
-  }
-  @keyframes spreadFlowers {
-    0%,100% { letter-spacing: 4px; }
-    50%     { letter-spacing: 14px; }
-  }
-  .main-text {
-    font-size: 4rem; font-weight: bold; line-height: 1.1;
-    background: linear-gradient(135deg, #fff0f5 0%, #ffb3d1 30%, #ff4d8d 60%, #c0006b 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    animation: textGlow 3s ease-in-out infinite alternate;
-    display: block; margin-bottom: 10px;
-  }
-  @keyframes textGlow {
-    0%   { filter: drop-shadow(0 0 12px #ff4d8d); }
-    100% { filter: drop-shadow(0 0 28px #ff80b0) drop-shadow(0 0 50px #ff2060); }
-  }
-  .name {
-    font-size: 4.8rem;
-    background: linear-gradient(135deg, #ffd6e8 0%, #ff79b0 40%, #ff003c 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    animation: namePulse 2.5s ease-in-out infinite alternate;
-    display: block;
-  }
-  @keyframes namePulse {
-    0%   { filter: drop-shadow(0 0 16px #ff4d8d); letter-spacing: 6px; }
-    100% { filter: drop-shadow(0 0 32px #ff80b0) drop-shadow(0 0 60px #ff2060); letter-spacing: 10px; }
-  }
-  .subtitle {
-    margin-top: 24px; font-size: 1rem;
-    color: rgba(255,200,220,0.75);
-    letter-spacing: 3px; text-transform: uppercase;
-    animation: fadeInOut 4s ease-in-out infinite;
-  }
-  .bottom-flowers {
-    margin-top: 22px; font-size: 1.9rem; letter-spacing: 8px;
-    animation: wiggle 3s ease-in-out infinite;
-    display: block; filter: drop-shadow(0 0 8px #ff6090);
-  }
-  @keyframes wiggle {
-    0%,100% { transform: rotate(-4deg); }
-    50%     { transform: rotate(4deg); }
-  }
+/* burst heart */
+#burst-heart {
+  position: fixed; z-index: 55; display: none; pointer-events: none;
+  transform: translate(-50%,-50%); font-size: 0;
+  filter: drop-shadow(0 0 24px #ff2060);
+}
+#burst-heart.grow { animation: heartGrow .9s cubic-bezier(.175,.885,.32,1.275) forwards; }
+@keyframes heartGrow {
+  0%   { font-size: 0rem;   opacity: 1; }
+  55%  { font-size: 8rem;   opacity: 1; }
+  100% { font-size: 5.5rem; opacity: 0; }
+}
 
-  /* orbits */
-  .orbit {
-    position: absolute; inset: -80px; border-radius: 50%;
-    pointer-events: none; animation: orbitSpin 12s linear infinite; z-index: 5;
-  }
-  .orbit-heart {
-    position: absolute; font-size: 1.4rem; top: 0; left: 50%;
-    transform-origin: 0 80px; filter: drop-shadow(0 0 6px #ff4d8d);
-  }
-  @keyframes orbitSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-  .orbit2 { animation-duration: 18s; animation-direction: reverse; inset: -50px; }
+/* ── CARD ── */
+.card {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%,-50%) scale(0); opacity: 0;
+  z-index: 40; text-align: center;
+  padding: 52px 62px; border-radius: 32px;
+  background: rgba(80,0,40,.38); backdrop-filter: blur(18px);
+  border: 1.5px solid rgba(255,100,160,.35);
+  box-shadow: 0 0 60px rgba(255,50,120,.25), 0 0 120px rgba(180,0,80,.15);
+  transition: transform .75s cubic-bezier(.175,.885,.32,1.275), opacity .55s ease;
+  max-width: 90vw; width: 510px;
+}
+.card.show {
+  transform: translate(-50%,-50%) scale(1); opacity: 1;
+  animation: cardBreath 4s ease-in-out infinite .9s;
+}
+@keyframes cardBreath {
+  0%,100%{ box-shadow: 0 0 60px rgba(255,50,120,.25), 0 0 120px rgba(180,0,80,.15); }
+  50%    { box-shadow: 0 0 90px rgba(255,50,120,.45), 0 0 180px rgba(180,0,80,.30); }
+}
+.card::before {
+  content: ''; position: absolute; inset: -3px; border-radius: 34px; z-index: -1;
+  background: linear-gradient(45deg, #ff0050, #ff80b0, #c0006b, #ff4d8d, #ff0050);
+  background-size: 300% 300%; opacity: .7;
+  animation: borderSpin 4s linear infinite;
+}
+@keyframes borderSpin {
+  0%  { background-position: 0%   50%; }
+  50% { background-position: 100% 50%; }
+  100%{ background-position: 0%   50%; }
+}
+.deco-hearts  { font-size: 2rem;   display: block; margin-bottom: 14px; letter-spacing: 10px; filter: drop-shadow(0 0 10px #ff2d78); animation: bounce 2s ease-in-out infinite; }
+.flower-ring  { font-size: 1.6rem; display: block; margin-bottom: 20px; letter-spacing: 4px;  filter: drop-shadow(0 0 8px #ff80b0);  animation: spread 5s ease-in-out infinite; }
+.main-text    { font-size: 4rem; font-weight: bold; display: block; margin-bottom: 8px; background: linear-gradient(135deg,#fff0f5,#ffb3d1 30%,#ff4d8d 60%,#c0006b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: textGlow 3s ease-in-out infinite alternate; }
+.name         { font-size: 4.8rem; display: block; background: linear-gradient(135deg,#ffd6e8,#ff79b0 40%,#ff003c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: namePulse 2.5s ease-in-out infinite alternate; }
+.subtitle     { margin-top: 22px; font-size: 1rem; color: rgba(255,200,220,.75); letter-spacing: 3px; text-transform: uppercase; animation: fadeIO 4s ease-in-out infinite; }
+.bot-flowers  { margin-top: 20px; font-size: 1.8rem; display: block; letter-spacing: 8px; filter: drop-shadow(0 0 8px #ff6090); animation: wiggle 3s ease-in-out infinite; }
 
-  /* ───── Click burst ───── */
-  .burst-particle {
-    position: fixed; pointer-events: none; z-index: 999;
-    transition: transform 1.2s ease-out, opacity 1.2s ease-out;
-  }
+@keyframes bounce   { 0%,100%{ transform: translateY(0) scale(1); }       50%{ transform: translateY(-10px) scale(1.12); } }
+@keyframes spread   { 0%,100%{ letter-spacing: 4px; }                      50%{ letter-spacing: 14px; } }
+@keyframes textGlow { 0%{ filter: drop-shadow(0 0 12px #ff4d8d); }         100%{ filter: drop-shadow(0 0 28px #ff80b0) drop-shadow(0 0 50px #ff2060); } }
+@keyframes namePulse{ 0%{ filter: drop-shadow(0 0 16px #ff4d8d); letter-spacing: 6px; } 100%{ filter: drop-shadow(0 0 32px #ff80b0) drop-shadow(0 0 60px #ff2060); letter-spacing: 10px; } }
+@keyframes fadeIO   { 0%,100%{ opacity: .5; } 50%{ opacity: 1; } }
+@keyframes wiggle   { 0%,100%{ transform: rotate(-4deg); } 50%{ transform: rotate(4deg); } }
+
+.orbit { position: absolute; inset: -80px; border-radius: 50%; pointer-events: none; animation: orbitSpin 12s linear infinite; z-index: 5; }
+.orbit2{ animation-duration: 18s; animation-direction: reverse; inset: -50px; }
+.orbit-heart { position: absolute; top: 0; left: 50%; transform-origin: 0 80px; filter: drop-shadow(0 0 6px #ff4d8d); }
+@keyframes orbitSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ── Ambient ── */
+#particles { opacity: 0; transition: opacity 1.2s ease .3s; pointer-events: none; }
+#particles.show { opacity: 1; }
+
+.petal {
+  position: fixed; top: -60px; font-size: var(--s); opacity: 0;
+  pointer-events: none; z-index: 6;
+  filter: drop-shadow(0 0 4px var(--glow));
+  animation: fall var(--d) linear infinite var(--delay);
+}
+@keyframes fall {
+  0%  { transform: translateY(-60px) rotate(0deg)   translateX(0);           opacity: 0; }
+  10% { opacity: .9; } 90% { opacity: .7; }
+  100%{ transform: translateY(110vh)  rotate(720deg) translateX(var(--drift)); opacity: 0; }
+}
+.heart-float {
+  position: fixed; bottom: -80px; font-size: var(--s); opacity: 0;
+  pointer-events: none; z-index: 6;
+  filter: drop-shadow(0 0 8px #ff4d8d);
+  animation: floatUp var(--d) ease-in infinite var(--delay);
+}
+@keyframes floatUp {
+  0%  { transform: translateY(0) scale(.4) rotate(var(--rot)); opacity: 0; }
+  20% { opacity: 1; } 80% { opacity: .6; }
+  100%{ transform: translateY(-110vh) scale(1.2) rotate(calc(var(--rot)+30deg)); opacity: 0; }
+}
+.sparkle {
+  position: fixed; opacity: 0; pointer-events: none; z-index: 6;
+  font-size: var(--s); left: var(--x); top: var(--y);
+  animation: sparkleAnim var(--d) ease-in-out infinite var(--delay);
+}
+@keyframes sparkleAnim {
+  0%,100%{ opacity: 0; transform: scale(0) rotate(0deg); }
+  50%    { opacity: 1; transform: scale(1.3) rotate(180deg); }
+}
+.burst-pop { position: fixed; pointer-events: none; z-index: 999; transition: transform 1.2s ease-out, opacity 1.2s ease-out; }
+.trail     { position: fixed; pointer-events: none; z-index: 29; transition: opacity 1s ease, transform 1s ease; }
 </style>
 </head>
 <body>
 
-<!-- Estrellas -->
-<div class="stars" id="stars"></div>
+<div id="stars"></div>
 
-<!-- Capa de todo lo que aparece al click -->
-<div id="show-layer">
-  <!-- Petals, hearts y sparkles se generan con JS aquí -->
+<div id="ground">
+  <div id="ground-flowers">
+    🌸 🌹 🌷 🌺 🌸 🌼 🌹 🌷 🌸 🌺 🌸 🌹 🌷 🌺 🌸 🌼 🌹 🌷 🌸 🌺 &nbsp;
+    🌸 🌹 🌷 🌺 🌸 🌼 🌹 🌷 🌸 🌺 🌸 🌹 🌷 🌺 🌸 🌼 🌹 🌷 🌸 🌺
+  </div>
 </div>
 
-<!-- Card -->
+<!-- Beautiful SVG dove -->
+<div id="bird">
+  <svg viewBox="0 0 220 130" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bGrad" cx="55%" cy="35%" r="55%">
+        <stop offset="0%"   stop-color="#fffef9"/>
+        <stop offset="70%"  stop-color="#f8e8f2"/>
+        <stop offset="100%" stop-color="#eecce0"/>
+      </radialGradient>
+      <linearGradient id="wGrad" x1="0%" y1="0%" x2="85%" y2="100%">
+        <stop offset="0%"   stop-color="#fff5fc"/>
+        <stop offset="45%"  stop-color="#f9cce8"/>
+        <stop offset="100%" stop-color="#e898c8"/>
+      </linearGradient>
+      <linearGradient id="wGrad2" x1="0%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%"   stop-color="#fde8f4"/>
+        <stop offset="100%" stop-color="#d880b8"/>
+      </linearGradient>
+      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- Tail feathers -->
+    <path d="M62,82 C42,76 22,66 16,55 C28,68 48,76 62,82Z"           fill="#f0c0d8"/>
+    <path d="M62,82 C38,86 18,82 12,72 C26,76 46,80 62,82Z"           fill="#f8d4e8"/>
+    <path d="M62,82 C40,95 22,98 16,89 C30,86 48,85 62,82Z"           fill="#f0c0d8"/>
+    <path d="M62,82 C46,106 30,112 24,104 C36,99 52,91 62,82Z"        fill="#e8b0cc"/>
+    <path d="M62,82 C55,112 44,120 38,114 C48,107 57,96 62,82Z"       fill="#f0c0d8"/>
+
+    <!-- Wing secondary feathers (slightly behind, slower beat) -->
+    <g id="bird-wing-sec">
+      <path d="M112,84 C88,108 55,118 18,108 C52,102 88,93 112,84Z"   fill="url(#wGrad2)" opacity=".85"/>
+    </g>
+
+    <!-- Wing primary — main animated wing -->
+    <g id="bird-wing-top" filter="url(#glow)">
+      <path d="M116,76 C96,42 60,14 14,26 C52,48 90,68 116,76Z"       fill="url(#wGrad)"/>
+      <!-- feather tip lines -->
+      <path d="M72,28 C66,16 56,12 50,18"  stroke="#f8cce4" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <path d="M54,34 C46,21 36,18 30,25"  stroke="#f8cce4" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <path d="M38,42 C30,30 22,28 18,34"  stroke="#f8cce4" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <!-- wing surface sheen -->
+      <path d="M116,76 C98,55 70,36 42,32"
+            stroke="rgba(255,255,255,.55)" stroke-width="2.5"
+            fill="none" stroke-linecap="round"/>
+    </g>
+
+    <!-- Body -->
+    <ellipse cx="112" cy="88" rx="58" ry="28" fill="url(#bGrad)"/>
+
+    <!-- Breast highlight -->
+    <ellipse cx="118" cy="82" rx="36" ry="18" fill="rgba(255,255,255,.35)"/>
+
+    <!-- Neck -->
+    <path d="M152,76 C160,64 167,61 176,66 C180,73 172,80 163,84 C153,87 146,83 152,76Z"
+          fill="url(#bGrad)"/>
+
+    <!-- Head -->
+    <circle cx="180" cy="62" r="23" fill="url(#bGrad)"/>
+
+    <!-- Head highlight -->
+    <ellipse cx="175" cy="56" rx="10" ry="7" fill="rgba(255,255,255,.35)"/>
+
+    <!-- Upper beak -->
+    <path d="M199,58 L221,61 L199,65Z" fill="#ffb830"/>
+    <!-- Lower beak -->
+    <path d="M199,65 L218,66 L199,69Z" fill="#e8991a"/>
+
+    <!-- Eye -->
+    <circle cx="190" cy="57" r="6"   fill="#1a0030"/>
+    <circle cx="192" cy="55" r="2.2" fill="white"/>
+    <circle cx="192.8" cy="55.8" r=".9" fill="#1a0030"/>
+
+    <!-- Tiny feet (visible below body) -->
+    <path d="M105,112 L102,122 M102,122 L97,126 M102,122 L106,126 M102,122 L110,125"
+          stroke="#e8b090" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M120,112 L117,122 M117,122 L112,126 M117,122 L121,126 M117,122 L125,125"
+          stroke="#e8b090" stroke-width="2" stroke-linecap="round" fill="none"/>
+  </svg>
+</div>
+
+<div id="egg-container">
+  <div id="egg-whole">
+    <div class="egg-shell"></div>
+    <svg id="crack-svg" viewBox="0 0 68 88" xmlns="http://www.w3.org/2000/svg">
+      <path d="M34,2 L29,22 L37,32 L27,50 L35,64 L31,86"
+            stroke="rgba(100,65,20,.75)" stroke-width="2" fill="none"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M29,22 L19,29 L23,40" stroke="rgba(100,65,20,.55)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      <path d="M37,32 L46,38 L43,48" stroke="rgba(100,65,20,.45)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="egg-half" id="egg-left"><div class="egg-shell"></div></div>
+  <div class="egg-half" id="egg-right"><div class="egg-shell"></div></div>
+</div>
+
+<div id="impact-ring"></div>
+<div id="burst-heart">💖</div>
+<div id="particles"></div>
+
 <div class="card" id="card">
   <div class="orbit" id="orbit1"></div>
   <div class="orbit orbit2" id="orbit2"></div>
   <span class="deco-hearts">💖 💗 💖 💗 💖</span>
   <span class="flower-ring">🌸 🌺 🌹 🌷 🌸 🌺 🌹 🌷</span>
-  <span class="main-text">TE AMOOOOOO MUCHO</span>
-  <span class="name">Ruby = 👸</span>
+  <span class="main-text">Te amo</span>
+  <span class="name">Ruby</span>
   <p class="subtitle">✨ para siempre y más allá ✨</p>
-  <span class="bottom-flowers">🌹 💕 🌸 💕 🌹</span>
-</div>
-
-<!-- Corazón principal -->
-<div id="heart-wrapper">
-  <div id="main-heart">💖</div>
-  <div id="hint">tócame ✨</div>
+  <span class="bot-flowers">🌹 💕 🌸 💕 🌹</span>
 </div>
 
 <script>
-  let revealed = false;
+const W = window.innerWidth;
+const H = window.innerHeight;
 
-  /* ── Estrellas ── */
-  const starsEl = document.getElementById('stars');
-  for (let i = 0; i < 160; i++) {
-    const s = document.createElement('div');
-    s.className = 'star';
-    const size = Math.random() * 3 + 1;
-    s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;--op:${(Math.random()*0.7+0.3).toFixed(2)};animation-delay:${(Math.random()*6).toFixed(1)}s;`;
-    starsEl.appendChild(s);
+/* ── Stars ── */
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 160; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() * 3 + 1;
+  s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;--op:${(Math.random()*.7+.3).toFixed(2)};animation-delay:${(Math.random()*6).toFixed(1)}s`;
+  starsEl.appendChild(s);
+}
+
+/* ── Particles ── */
+const particlesEl   = document.getElementById('particles');
+const petalEmojis   = ['🌸','🌺','🌹','🌷','🌼'];
+const glows         = ['#ff80b0','#ff4d8d','#ffb3d1','#ff003c'];
+const heartEmojis   = ['💖','💗','💓','💕','💞','💝','❤️'];
+const sparkleGlyphs = ['✨','⭐','💫','🌟'];
+
+for (let i = 0; i < 26; i++) {
+  const p = document.createElement('div'); p.className = 'petal';
+  p.style.cssText = `left:${(Math.random()*110-5).toFixed(1)}%;--s:${(Math.random()*1.6+1).toFixed(1)}rem;--d:${(Math.random()*8+7).toFixed(1)}s;--delay:-${(Math.random()*12).toFixed(1)}s;--drift:${((Math.random()-.5)*300).toFixed(0)}px;--glow:${glows[Math.floor(Math.random()*glows.length)]}`;
+  p.textContent = petalEmojis[Math.floor(Math.random()*petalEmojis.length)];
+  particlesEl.appendChild(p);
+}
+for (let i = 0; i < 18; i++) {
+  const h = document.createElement('div'); h.className = 'heart-float';
+  h.style.cssText = `--s:${(Math.random()*2+1.2).toFixed(1)}rem;--d:${(Math.random()*7+6).toFixed(1)}s;--delay:-${(Math.random()*14).toFixed(1)}s;left:${(Math.random()*100).toFixed(1)}%;--rot:${(Math.random()*40-20).toFixed(0)}deg`;
+  h.textContent = heartEmojis[Math.floor(Math.random()*heartEmojis.length)];
+  particlesEl.appendChild(h);
+}
+for (let i = 0; i < 20; i++) {
+  const sp = document.createElement('div'); sp.className = 'sparkle';
+  sp.style.cssText = `--s:${(Math.random()*1.5+.8).toFixed(1)}rem;--d:${(Math.random()*3+2).toFixed(1)}s;--delay:-${(Math.random()*5).toFixed(1)}s;--x:${(Math.random()*100).toFixed(1)}%;--y:${(Math.random()*100).toFixed(1)}%`;
+  sp.textContent = sparkleGlyphs[Math.floor(Math.random()*sparkleGlyphs.length)];
+  particlesEl.appendChild(sp);
+}
+
+/* ── Orbits ── */
+const orb1 = document.getElementById('orbit1');
+const orb2 = document.getElementById('orbit2');
+['💖','💗','💕','💓','💖','💗'].forEach((e,i)=>{ const oh=document.createElement('div'); oh.className='orbit-heart'; oh.textContent=e; oh.style.transform=`rotate(${i*60}deg) translateY(-120px)`; orb1.appendChild(oh); });
+['🌸','🌺','🌹','🌷','🌼'].forEach((e,i)=>{ const oh=document.createElement('div'); oh.className='orbit-heart'; oh.textContent=e; oh.style.cssText=`transform:rotate(${i*72}deg) translateY(-95px);font-size:1.2rem`; orb2.appendChild(oh); });
+
+/* ── Refs ── */
+const birdEl       = document.getElementById('bird');
+const eggContainer = document.getElementById('egg-container');
+const eggWhole     = document.getElementById('egg-whole');
+const eggLeftEl    = document.getElementById('egg-left');
+const eggRightEl   = document.getElementById('egg-right');
+const crackSvgEl   = document.getElementById('crack-svg');
+const burstHeart   = document.getElementById('burst-heart');
+const cardEl       = document.getElementById('card');
+const impactRing   = document.getElementById('impact-ring');
+
+const BIRD_W  = 230, BIRD_H = 136;
+const EGG_W   = 68,  EGG_H  = 88;
+const BIRD_Y  = H * 0.11;
+const DROP_X  = W  * 0.46;
+const GROUND_Y= H  * 0.80;
+const EGG_LAND= GROUND_Y - EGG_H;
+
+let birdX = -BIRD_W - 10, eggDropped = false, revealed = false;
+let trailCounter = 0;
+
+/* ── Bird loop ── */
+function birdLoop() {
+  birdX += 3.2;
+  const wobble = Math.sin(birdX * 0.013) * 14;
+  birdEl.style.left = birdX + 'px';
+  birdEl.style.top  = (BIRD_Y + wobble) + 'px';
+
+  /* love trail */
+  trailCounter++;
+  if (trailCounter % 18 === 0) {
+    const t = document.createElement('div');
+    t.className = 'trail';
+    t.textContent = Math.random() < .5 ? '💕' : '✨';
+    t.style.cssText = `left:${birdX + 30}px;top:${BIRD_Y + wobble + 90}px;font-size:${(Math.random()*1.2+.8).toFixed(1)}rem;opacity:1`;
+    document.body.appendChild(t);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      t.style.opacity = '0';
+      t.style.transform = `translateY(-28px) scale(.25)`;
+    }));
+    setTimeout(() => t.remove(), 1100);
   }
 
-  /* ── Generar partículas (ocultas) ── */
-  const layer = document.getElementById('show-layer');
-  const petalEmojis  = ['🌸','🌺','🌹','🌷','🍀','🌼'];
-  const glows        = ['#ff80b0','#ff4d8d','#ffb3d1','#ff003c','#ffd6e8'];
-  const heartEmojis  = ['💖','💗','💓','💕','💞','💝','❤️'];
-  const sparkleGlyphs= ['✨','⭐','💫','🌟'];
-
-  for (let i = 0; i < 28; i++) {
-    const p = document.createElement('div');
-    p.className = 'petal';
-    const drift = (Math.random()-0.5)*300;
-    p.style.cssText = `left:${Math.random()*110-5}%;--s:${(Math.random()*1.6+1).toFixed(1)}rem;--d:${(Math.random()*8+7).toFixed(1)}s;--delay:-${(Math.random()*12).toFixed(1)}s;--drift:${drift.toFixed(0)}px;--glow:${glows[Math.floor(Math.random()*glows.length)]};`;
-    p.textContent = petalEmojis[Math.floor(Math.random()*petalEmojis.length)];
-    layer.appendChild(p);
+  if (!eggDropped && birdX >= DROP_X) {
+    eggDropped = true;
+    /* egg drops from belly center */
+    spawnEgg(birdX + BIRD_W * 0.50, BIRD_Y + wobble + BIRD_H * 0.72);
   }
 
-  for (let i = 0; i < 20; i++) {
-    const h = document.createElement('div');
-    h.className = 'heart-float';
-    const rot = (Math.random()*40-20).toFixed(0);
-    h.style.cssText = `--s:${(Math.random()*2+1.2).toFixed(1)}rem;--d:${(Math.random()*7+6).toFixed(1)}s;--delay:-${(Math.random()*14).toFixed(1)}s;left:${(Math.random()*100).toFixed(1)}%;--rot:${rot}deg;`;
-    h.textContent = heartEmojis[Math.floor(Math.random()*heartEmojis.length)];
-    layer.appendChild(h);
-  }
+  if (birdX < W + BIRD_W + 20) requestAnimationFrame(birdLoop);
+  else birdEl.style.display = 'none';
+}
 
-  for (let i = 0; i < 22; i++) {
-    const sp = document.createElement('div');
-    sp.className = 'sparkle';
-    sp.style.cssText = `--s:${(Math.random()*1.5+0.8).toFixed(1)}rem;--d:${(Math.random()*3+2).toFixed(1)}s;--delay:-${(Math.random()*5).toFixed(1)}s;--x:${(Math.random()*100).toFixed(1)}%;--y:${(Math.random()*100).toFixed(1)}%;`;
-    sp.textContent = sparkleGlyphs[Math.floor(Math.random()*sparkleGlyphs.length)];
-    layer.appendChild(sp);
-  }
+/* ── Egg spawn ── */
+function spawnEgg(sx, sy) {
+  eggContainer.style.left = sx + 'px';
+  eggContainer.style.top  = sy + 'px';
+  eggContainer.style.display = 'block';
+  eggWhole.style.display = 'block';
 
-  /* ── Orbit hearts ── */
-  const orbit1 = document.getElementById('orbit1');
-  const orbit2 = document.getElementById('orbit2');
-  for (let i = 0; i < 6; i++) {
-    const oh = document.createElement('div'); oh.className = 'orbit-heart';
-    oh.textContent = ['💖','💗','💕','💓'][i%4];
-    oh.style.transform = `rotate(${i*60}deg) translateY(-120px)`; orbit1.appendChild(oh);
-  }
-  for (let i = 0; i < 5; i++) {
-    const oh = document.createElement('div'); oh.className = 'orbit-heart';
-    oh.textContent = ['🌸','🌺','🌹','🌷','🌼'][i%5];
-    oh.style.transform = `rotate(${i*72}deg) translateY(-95px)`; oh.style.fontSize='1.2rem'; orbit2.appendChild(oh);
-  }
+  const fallMs = 900 + Math.max(0, EGG_LAND - sy) * 0.65;
+  eggContainer.style.transition = `top ${(fallMs/1000).toFixed(2)}s cubic-bezier(.38,0,.96,1)`;
 
-  /* ── Click en el corazón principal ── */
-  const mainHeart   = document.getElementById('main-heart');
-  const heartWrapper= document.getElementById('heart-wrapper');
-  const card        = document.getElementById('card');
-  const hint        = document.getElementById('hint');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    eggContainer.style.top = EGG_LAND + 'px';
+  }));
 
-  mainHeart.addEventListener('click', (e) => {
-    if (revealed) return;
-    revealed = true;
+  setTimeout(() => crackSequence(sx, EGG_LAND), fallMs + 40);
+}
 
-    /* burst en el punto del click */
-    spawnBurst(e.clientX, e.clientY, 20);
+/* ── Crack sequence ── */
+function crackSequence(ex, ey) {
+  const cx = ex + EGG_W / 2;
+  const cy = ey + EGG_H / 2;
 
-    /* animación de explosión del corazón */
-    mainHeart.classList.add('explode');
+  impactRing.style.left = cx + 'px';
+  impactRing.style.top  = (ey + EGG_H) + 'px';
+  impactRing.style.display = 'block';
+  impactRing.classList.add('burst');
+
+  eggWhole.classList.add('shake');
+
+  setTimeout(() => {
+    eggWhole.classList.remove('shake');
+    crackSvgEl.classList.add('show');
 
     setTimeout(() => {
-      heartWrapper.style.display = 'none';
-    }, 620);
+      eggWhole.style.display = 'none';
+      eggLeftEl.style.display = 'block';
+      eggRightEl.style.display = 'block';
 
-    /* mostrar todo */
-    starsEl.classList.add('show');
-    layer.classList.add('show');
-
-    setTimeout(() => {
-      card.classList.add('show');
-    }, 400);
-  });
-
-  /* ── Burst de partículas ── */
-  const burstEmojis = ['💖','💗','✨','💫','🌸','💕','🌟','❤️'];
-  function spawnBurst(cx, cy, count) {
-    for (let i = 0; i < count; i++) {
-      const b = document.createElement('div');
-      b.className = 'burst-particle';
-      b.style.cssText = `left:${cx}px;top:${cy}px;font-size:${Math.random()*2+0.9}rem;opacity:1;transform:translate(0,0) scale(1);`;
-      b.textContent = burstEmojis[Math.floor(Math.random()*burstEmojis.length)];
-      document.body.appendChild(b);
-      const angle = Math.random()*Math.PI*2;
-      const dist  = Math.random()*180+60;
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        b.style.transform = `translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist-80}px) scale(0.1)`;
-        b.style.opacity   = '0';
+        eggLeftEl.classList.add('split');
+        eggRightEl.classList.add('split');
       }));
-      setTimeout(() => b.remove(), 1300);
-    }
-  }
 
-  /* ── Burst al hacer click en cualquier lugar (después de revelar) ── */
-  document.addEventListener('click', (e) => {
-    if (!revealed || e.target === mainHeart) return;
-    spawnBurst(e.clientX, e.clientY, 10);
-  });
+      spawnBurst(cx, cy, 20);
+
+      setTimeout(() => {
+        burstHeart.style.left = cx + 'px';
+        burstHeart.style.top  = cy + 'px';
+        burstHeart.style.display = 'block';
+        burstHeart.classList.add('grow');
+
+        setTimeout(() => {
+          cardEl.classList.add('show');
+          particlesEl.classList.add('show');
+          revealed = true;
+        }, 480);
+      }, 300);
+
+    }, 280);
+  }, 460);
+}
+
+/* ── Burst ── */
+const burstEmojis = ['💖','💗','✨','💫','🌸','💕','🌟','❤️','🌹','🌷'];
+function spawnBurst(cx, cy, count) {
+  for (let i = 0; i < count; i++) {
+    const b = document.createElement('div'); b.className = 'burst-pop';
+    b.style.cssText = `left:${cx}px;top:${cy}px;font-size:${(Math.random()*2+.9).toFixed(1)}rem;opacity:1;transform:translate(-50%,-50%) scale(1)`;
+    b.textContent = burstEmojis[Math.floor(Math.random()*burstEmojis.length)];
+    document.body.appendChild(b);
+    const angle = Math.random()*Math.PI*2, dist = Math.random()*170+55;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      b.style.transform = `translate(calc(-50% + ${(Math.cos(angle)*dist).toFixed(0)}px),calc(-50% + ${(Math.sin(angle)*dist-65).toFixed(0)}px)) scale(.08)`;
+      b.style.opacity = '0';
+    }));
+    setTimeout(() => b.remove(), 1400);
+  }
+}
+
+document.addEventListener('click', e => { if (revealed) spawnBurst(e.clientX, e.clientY, 10); });
+
+setTimeout(() => { birdEl.style.display = 'block'; requestAnimationFrame(birdLoop); }, 900);
 </script>
 </body>
 </html>
